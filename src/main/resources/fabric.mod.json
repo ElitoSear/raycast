@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "raycast",
+  "version": "${version}",
+  "name": "raycast",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "icon": "assets/raycast/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "elito.raycast.client.RaycastClient"
+    ],
+    "main": [
+      "elito.raycast.Raycast"
+    ]
+  },
+  "mixins": [
+    "raycast.mixins.json",
+    {
+      "config": "raycast.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
