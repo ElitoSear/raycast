@@ -5,16 +5,13 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.core.BlockPos;
 import net.minecraft.server.commands.ExecuteCommand;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.AABB;
+import net.minecraft.world.level.ClipBlockStateContext;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.shapes.BooleanOp;
-import net.minecraft.world.phys.shapes.Shapes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -49,14 +46,13 @@ public class ExecuteCommandMixin {
                                                         Vec2 rotation = source.getRotation();
                                                         Vec3 view = calculateViewVector(rotation.x,rotation.y);
 
+                                                        Vec3 destination = origin.add(view.scale(256));
 
+                                                        ClipBlockStateContext clip = new ClipBlockStateContext(origin, destination, state -> !state.isAir());
 
+                                                        BlockHitResult result = level.isBlockInLine(clip);
 
-                                                        if (isColliding(blockState, blockPos, position, level)) {
-
-                                                        }
-
-                                                        return source.withPosition(position);
+                                                        return source.withPosition(result.getLocation());
                                                     }
                                             )
                             )
@@ -72,17 +68,5 @@ public class ExecuteCommandMixin {
         float l = Mth.cos(h);
         float m = Mth.sin(h);
         return new Vec3(k * l, -m, j * l);
-    }
-
-    @Unique
-    private static boolean isColliding(BlockState blockState, BlockPos blockPos, Vec3 incomingPosition, ServerLevel world) {
-        double d = 0.01;
-
-        AABB box = AABB.ofSize(incomingPosition, d, d, d);
-
-        return !blockState.isAir()
-                && Shapes.joinIsNotEmpty(
-                blockState.getCollisionShape(world, blockPos).move(blockPos.getX(), blockPos.getY(), blockPos.getZ()), Shapes.create(box), BooleanOp.AND
-        );
     }
 }
