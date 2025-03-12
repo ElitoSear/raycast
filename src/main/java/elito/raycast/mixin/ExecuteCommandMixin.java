@@ -1,61 +1,71 @@
 package elito.raycast.mixin;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.tree.LiteralCommandNode;
+import com.mojang.brigadier.arguments.FloatArgumentType;
+import com.mojang.brigadier.arguments.DoubleArgumentType;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.server.commands.ExecuteCommand;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
-import net.minecraft.world.level.ClipBlockStateContext;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.CollisionContext;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Collections;
+
 @Mixin(ExecuteCommand.class)
 public class ExecuteCommandMixin {
 
-    @Inject(at = @At("HEAD"), method = "register")
+    @Inject(at = @At("TAIL"), method = "register")
     private static void register(CommandDispatcher<CommandSourceStack> commandDispatcher, CommandBuildContext commandBuildContext, CallbackInfo ci){
-        LiteralCommandNode<CommandSourceStack> literalCommandNode = commandDispatcher.register(
-                Commands.literal("execute")
-                        .then(
-                                Commands.literal("raycast")
-                        )
-        );
 
         commandDispatcher
                 .register(
-                    Commands.literal("execute")
-                            .then(
-                                    Commands.literal("raycast")
-                                            .redirect(
-                                                    literalCommandNode,
-                                                    commandContext -> {
-                                                        CommandSourceStack source = commandContext.getSource();
+                        Commands.literal("execute")
+                                .then(
+                                        Commands.literal("raycast")
+                                                .then(
+                                                        Commands.argument("ratio", DoubleArgumentType.doubleArg(0, 1))
+                                                                .redirect(
+                                                                        commandDispatcher.getRoot().getChild("execute"),
+                                                                        commandContext -> {
+                                                                            //Context
+                                                                            CommandSourceStack source = commandContext.getSource();
+                                                                            //Get dimension
+                                                                            ServerLevel level = source.getLevel();
+                                                                            //Get origin
+                                                                            Vec3 origin = source.getPosition();
+                                                                            //Get rotation
+                                                                            Vec2 rotation = source.getRotation();
+                                                                            //Get view and add a limited amount
+                                                                            Vec3 view = calculateViewVector(rotation.x,rotation.y);
 
-                                                        ServerLevel level = source.getLevel();
-                                                        Vec3 origin = source.getPosition();
+                                                                            double limit = DoubleArgumentType.getDouble(commandContext, "ratio");
 
-                                                        Vec2 rotation = source.getRotation();
-                                                        Vec3 view = calculateViewVector(rotation.x,rotation.y);
+                                                                            Vec3 destination = extend(origin, rotation, 512);
+                                                                            //Clip through blocks with collision shape
+                                                                            ClipContext clipContext = new ClipContext(origin, destination, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, CollisionContext.empty());
 
-                                                        Vec3 destination = origin.add(view.scale(256));
+                                                                            Vec3 clipResult = level.clip(clipContext).getLocation();
+                                                                            double distance = origin.distanceTo(clipResult);
 
-                                                        ClipBlockStateContext clip = new ClipBlockStateContext(origin, destination, state -> !state.isAir());
+                                                                            Vec3 result = extend(origin, rotation, distance * limit);
 
-                                                        BlockHitResult result = level.isBlockInLine(clip);
-
-                                                        return source.withPosition(result.getLocation());
-                                                    }
-                                            )
-                            )
+                                                                            //Return found position
+                                                                            return source.withPosition(result).withRotation(rotation);
+                                                                        }
+                                                                )
+                                                )
+                                )
                 );
     }
 
@@ -68,5 +78,13 @@ public class ExecuteCommandMixin {
         float l = Mth.cos(h);
         float m = Mth.sin(h);
         return new Vec3(k * l, -m, j * l);
+    }
+
+    @Unique
+    private static Vec3 extend(Vec3 position, Vec2 rotation, double scale ) {
+
+        Vec3 view = calculateViewVector(rotation.x,rotation.y);
+
+        return position.add(view.scale(scale));
     }
 }
