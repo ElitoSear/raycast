@@ -4,6 +4,7 @@
   "package": "elito.raycast.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "ExecuteCommandMixin"
   ],
   "injectors": {
     "defaultRequire": 1

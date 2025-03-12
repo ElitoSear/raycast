@@ -7,7 +7,6 @@
   "authors": [],
   "contact": {},
   "license": "All-Rights-Reserved",
-  "icon": "assets/raycast/icon.png",
   "environment": "*",
   "entrypoints": {
     "client": [
