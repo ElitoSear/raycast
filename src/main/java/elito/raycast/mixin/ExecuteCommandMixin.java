@@ -1,7 +1,6 @@
 package elito.raycast.mixin;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
@@ -10,7 +9,6 @@ import net.minecraft.server.commands.ExecuteCommand;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -19,8 +17,6 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.Collections;
 
 @Mixin(ExecuteCommand.class)
 public class ExecuteCommandMixin {
@@ -46,8 +42,6 @@ public class ExecuteCommandMixin {
                                                                             Vec3 origin = source.getPosition();
                                                                             //Get rotation
                                                                             Vec2 rotation = source.getRotation();
-                                                                            //Get view and add a limited amount
-                                                                            Vec3 view = calculateViewVector(rotation.x,rotation.y);
 
                                                                             double limit = DoubleArgumentType.getDouble(commandContext, "ratio");
 
