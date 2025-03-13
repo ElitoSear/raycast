@@ -11,5 +11,6 @@ public class Raycast implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        LOGGER.info("Initializing: " + MOD_ID);
     }
 }

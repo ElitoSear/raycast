@@ -45,7 +45,7 @@ public class ExecuteCommandMixin {
 
                                                                             double limit = DoubleArgumentType.getDouble(commandContext, "ratio");
 
-                                                                            Vec3 destination = extend(origin, rotation, 512);
+                                                                            Vec3 destination = extend(origin, rotation, 128);
                                                                             //Clip through blocks with collision shape
                                                                             ClipContext clipContext = new ClipContext(origin, destination, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, CollisionContext.empty());
 
