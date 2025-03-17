@@ -15,6 +15,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import static net.minecraft.server.command.CommandManager.*;
+import static elito.raycast.Raycast.LOGGER;
 
 
 @Mixin(ExecuteCommand.class)
@@ -27,33 +28,25 @@ public class ExecuteCommandMixin {
                 .register(
                         literal("execute")
                                 .then(
-                                        literal("raycast")
-                                                .then(
-                                                        argument("ratio", DoubleArgumentType.doubleArg(0, 1))
-                                                                .redirect(
-                                                                        dispatcher.getRoot().getChild("execute"),
-                                                                        context -> {
+                                        literal("raycast_surfaced")
+                                                .redirect(
+                                                        dispatcher.getRoot().getChild("execute"),
+                                                        context -> {
+                                                            ServerCommandSource source = context.getSource();
 
-                                                                            ServerCommandSource source = context.getSource();
+                                                            ServerWorld world = source.getWorld();
 
-                                                                            ServerWorld world = source.getWorld();
+                                                            Vec3d origin = source.getPosition();
 
-                                                                            Vec3d origin = source.getPosition();
+                                                            Vec2f rotation = source.getRotation();
 
-                                                                            Vec2f rotation = source.getRotation();
+                                                            BlockHitResult hit = Cast.cast(origin, rotation, world);
+                                                            Vec3d destination = hit.getPos();
 
-                                                                            BlockHitResult hit = Cast.cast(origin, rotation, world);
-                                                                            Vec3d destination = hit.getPos();
+                                                            Vec2f rotationUpdate = Cast.getRotation(hit.getSide());
 
-                                                                            double distance = origin.distanceTo(destination);
-
-                                                                            double limit = DoubleArgumentType.getDouble(context, "ratio");
-
-                                                                            Vec3d result = Cast.forward(origin, rotation, distance * limit);
-
-                                                                            return source.withPosition(result).withRotation(rotation);
-                                                                        }
-                                                                )
+                                                            return source.withPosition(destination).withRotation(new Vec2f(rotationUpdate.y, rotationUpdate.x));
+                                                        }
                                                 )
                                 )
                 );
