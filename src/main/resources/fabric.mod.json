@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "id": "raycast",
+  "id": "raycast_surfaced",
   "version": "${version}",
-  "name": "raycast",
+  "name": "raycast_surfaced",
   "description": "",
   "authors": [],
   "contact": {},
